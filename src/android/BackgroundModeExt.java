@@ -80,13 +80,11 @@ public class BackgroundModeExt extends CordovaPlugin {
      * @return Returning false results in a "MethodNotFound" error.
      */
     @Override
-    public boolean execute (String action, JSONArray args,
-                            CallbackContext callback)
-    {
+    public boolean execute(String action, JSONArray args,
+            CallbackContext callback) {
         boolean validAction = true;
 
-        switch (action)
-        {
+        switch (action) {
             case "battery":
                 disableBatteryOptimizations();
                 break;
@@ -131,8 +129,7 @@ public class BackgroundModeExt extends CordovaPlugin {
     /**
      * Moves the app to the background.
      */
-    private void moveToBackground()
-    {
+    private void moveToBackground() {
         Intent intent = new Intent(Intent.ACTION_MAIN);
 
         intent.addCategory(Intent.CATEGORY_HOME);
@@ -143,15 +140,14 @@ public class BackgroundModeExt extends CordovaPlugin {
     /**
      * Moves the app to the foreground.
      */
-    private void moveToForeground()
-    {
-        Activity  app = getApp();
+    private void moveToForeground() {
+        Activity app = getApp();
         Intent intent = getLaunchIntent();
 
         intent.addFlags(
                 Intent.FLAG_ACTIVITY_REORDER_TO_FRONT |
-                Intent.FLAG_ACTIVITY_SINGLE_TOP |
-                Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        Intent.FLAG_ACTIVITY_SINGLE_TOP |
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
         clearScreenAndKeyguardFlags();
         app.startActivity(intent);
@@ -161,18 +157,18 @@ public class BackgroundModeExt extends CordovaPlugin {
      * Enable GPS position tracking while in background.
      */
     private void disableWebViewOptimizations() {
-        Thread thread = new Thread(){
+        Thread thread = new Thread() {
             public void run() {
                 try {
                     Thread.sleep(1000);
                     getApp().runOnUiThread(() -> {
-                        View view = webView.getEngine().getView();
+                        View view = (webView.getEngine() != null) ? webView.getEngine().getView() : webView.getView();
 
                         try {
                             Class.forName("org.crosswalk.engine.XWalkCordovaView")
-                                 .getMethod("onShow")
-                                 .invoke(view);
-                        } catch (Exception e){
+                                    .getMethod("onShow")
+                                    .invoke(view);
+                        } catch (Exception e) {
                             view.dispatchWindowVisibilityChanged(View.VISIBLE);
                         }
                     });
@@ -190,12 +186,11 @@ public class BackgroundModeExt extends CordovaPlugin {
      * Requires permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS to function.
      */
     @SuppressLint("BatteryLife")
-    private void disableBatteryOptimizations()
-    {
+    private void disableBatteryOptimizations() {
         Activity activity = cordova.getActivity();
-        Intent intent     = new Intent();
-        String pkgName    = activity.getPackageName();
-        PowerManager pm   = (PowerManager)getService(POWER_SERVICE);
+        Intent intent = new Intent();
+        String pkgName = activity.getPackageName();
+        PowerManager pm = (PowerManager) getService(POWER_SERVICE);
 
         if (SDK_INT < M)
             return;
@@ -215,21 +210,17 @@ public class BackgroundModeExt extends CordovaPlugin {
      *
      * @param arg Text and title for the dialog or false to skip the dialog.
      */
-    private void openAppStart (Object arg)
-    {
+    private void openAppStart(Object arg) {
         Activity activity = cordova.getActivity();
         PackageManager pm = activity.getPackageManager();
 
-        for (Intent intent : getAppStartIntents())
-        {
-            if (pm.resolveActivity(intent, MATCH_DEFAULT_ONLY) != null)
-            {
+        for (Intent intent : getAppStartIntents()) {
+            if (pm.resolveActivity(intent, MATCH_DEFAULT_ONLY) != null) {
                 JSONObject spec = (arg instanceof JSONObject) ? (JSONObject) arg : null;
 
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-                if (arg instanceof Boolean && !((Boolean) arg))
-                {
+                if (arg instanceof Boolean && !((Boolean) arg)) {
                     activity.startActivity(intent);
                     break;
                 }
@@ -237,20 +228,17 @@ public class BackgroundModeExt extends CordovaPlugin {
                 AlertDialog.Builder dialog = new AlertDialog.Builder(activity, Theme_DeviceDefault_Light_Dialog);
 
                 dialog.setPositiveButton(ok, (o, d) -> activity.startActivity(intent));
-                dialog.setNegativeButton(cancel, (o, d) -> {});
+                dialog.setNegativeButton(cancel, (o, d) -> {
+                });
                 dialog.setCancelable(true);
 
-                if (spec != null && spec.has("title"))
-                {
+                if (spec != null && spec.has("title")) {
                     dialog.setTitle(spec.optString("title"));
                 }
 
-                if (spec != null && spec.has("text"))
-                {
+                if (spec != null && spec.has("text")) {
                     dialog.setMessage(spec.optString("text"));
-                }
-                else
-                {
+                } else {
                     dialog.setMessage("missing text");
                 }
 
@@ -265,8 +253,7 @@ public class BackgroundModeExt extends CordovaPlugin {
      * Excludes the app from the recent tasks list.
      */
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private void excludeFromTaskList()
-    {
+    private void excludeFromTaskList() {
         ActivityManager am = (ActivityManager) getService(ACTIVITY_SERVICE);
 
         if (am == null || SDK_INT < 21)
@@ -286,9 +273,8 @@ public class BackgroundModeExt extends CordovaPlugin {
      * @param callback The callback to invoke.
      */
     @SuppressWarnings("deprecation")
-    private void isDimmed (CallbackContext callback)
-    {
-        boolean status   = isDimmed();
+    private void isDimmed(CallbackContext callback) {
+        boolean status = isDimmed();
         PluginResult res = new PluginResult(Status.OK, status);
 
         callback.sendPluginResult(res);
@@ -298,12 +284,10 @@ public class BackgroundModeExt extends CordovaPlugin {
      * Returns if the screen is active.
      */
     @SuppressWarnings("deprecation")
-    private boolean isDimmed()
-    {
+    private boolean isDimmed() {
         PowerManager pm = (PowerManager) getService(POWER_SERVICE);
 
-        if (SDK_INT < 20)
-        {
+        if (SDK_INT < 20) {
             return !pm.isScreenOn();
         }
 
@@ -313,8 +297,7 @@ public class BackgroundModeExt extends CordovaPlugin {
     /**
      * Wakes up the device if the screen isn't still on.
      */
-    private void wakeup()
-    {
+    private void wakeup() {
         try {
             acquireWakeLock();
         } catch (Exception e) {
@@ -325,8 +308,7 @@ public class BackgroundModeExt extends CordovaPlugin {
     /**
      * Unlocks the device even with password protection.
      */
-    private void unlock()
-    {
+    private void unlock() {
         addSreenAndKeyguardFlags();
         getApp().startActivity(getLaunchIntent());
     }
@@ -335,8 +317,7 @@ public class BackgroundModeExt extends CordovaPlugin {
      * Acquires a wake lock to wake up the device.
      */
     @SuppressWarnings("deprecation")
-    private void acquireWakeLock()
-    {
+    private void acquireWakeLock() {
         PowerManager pm = (PowerManager) getService(POWER_SERVICE);
 
         releaseWakeLock();
@@ -345,7 +326,7 @@ public class BackgroundModeExt extends CordovaPlugin {
             return;
 
         int level = PowerManager.SCREEN_DIM_WAKE_LOCK |
-                    PowerManager.ACQUIRE_CAUSES_WAKEUP;
+                PowerManager.ACQUIRE_CAUSES_WAKEUP;
 
         wakeLock = pm.newWakeLock(level, "backgroundmode:wakelock");
         wakeLock.setReferenceCounted(false);
@@ -355,8 +336,7 @@ public class BackgroundModeExt extends CordovaPlugin {
     /**
      * Releases the previously acquire wake lock.
      */
-    private void releaseWakeLock()
-    {
+    private void releaseWakeLock() {
         if (wakeLock != null && wakeLock.isHeld()) {
             wakeLock.release();
             wakeLock = null;
@@ -366,24 +346,23 @@ public class BackgroundModeExt extends CordovaPlugin {
     /**
      * Adds required flags to the window to unlock/wakeup the device.
      */
-    private void addSreenAndKeyguardFlags()
-    {
-        getApp().runOnUiThread(() -> getApp().getWindow().addFlags(FLAG_ALLOW_LOCK_WHILE_SCREEN_ON | FLAG_SHOW_WHEN_LOCKED | FLAG_TURN_SCREEN_ON | FLAG_DISMISS_KEYGUARD));
+    private void addSreenAndKeyguardFlags() {
+        getApp().runOnUiThread(() -> getApp().getWindow().addFlags(
+                FLAG_ALLOW_LOCK_WHILE_SCREEN_ON | FLAG_SHOW_WHEN_LOCKED | FLAG_TURN_SCREEN_ON | FLAG_DISMISS_KEYGUARD));
     }
 
     /**
      * Clears required flags to the window to unlock/wakeup the device.
      */
-    private void clearScreenAndKeyguardFlags()
-    {
-        getApp().runOnUiThread(() -> getApp().getWindow().clearFlags(FLAG_ALLOW_LOCK_WHILE_SCREEN_ON | FLAG_SHOW_WHEN_LOCKED | FLAG_TURN_SCREEN_ON | FLAG_DISMISS_KEYGUARD));
+    private void clearScreenAndKeyguardFlags() {
+        getApp().runOnUiThread(() -> getApp().getWindow().clearFlags(
+                FLAG_ALLOW_LOCK_WHILE_SCREEN_ON | FLAG_SHOW_WHEN_LOCKED | FLAG_TURN_SCREEN_ON | FLAG_DISMISS_KEYGUARD));
     }
 
     /**
      * Removes required flags to the window to unlock/wakeup the device.
      */
-    static void clearKeyguardFlags (Activity app)
-    {
+    static void clearKeyguardFlags(Activity app) {
         app.runOnUiThread(() -> app.getWindow().clearFlags(FLAG_DISMISS_KEYGUARD));
     }
 
@@ -397,9 +376,8 @@ public class BackgroundModeExt extends CordovaPlugin {
     /**
      * Gets the launch intent for the main activity.
      */
-    private Intent getLaunchIntent()
-    {
-        Context app    = getApp().getApplicationContext();
+    private Intent getLaunchIntent() {
+        Context app = getApp().getApplicationContext();
         String pkgName = app.getPackageName();
 
         return app.getPackageManager().getLaunchIntentForPackage(pkgName);
@@ -410,36 +388,52 @@ public class BackgroundModeExt extends CordovaPlugin {
      *
      * @param name The name of the service.
      */
-    private Object getService(String name)
-    {
+    private Object getService(String name) {
         return getApp().getSystemService(name);
     }
 
     /**
      * Returns list of all possible intents to present the app start settings.
      */
-    private List<Intent> getAppStartIntents()
-    {
+    private List<Intent> getAppStartIntents() {
         return Arrays.asList(
-            new Intent().setComponent(new ComponentName("com.miui.securitycenter","com.miui.permcenter.autostart.AutoStartManagementActivity")),
-            new Intent().setComponent(new ComponentName("com.letv.android.letvsafe", "com.letv.android.letvsafe.AutobootManageActivity")),
-            new Intent().setComponent(new ComponentName("com.huawei.systemmanager", "com.huawei.systemmanager.appcontrol.activity.StartupAppControlActivity")),
-            new Intent().setComponent(new ComponentName("com.huawei.systemmanager", "com.huawei.systemmanager.optimize.process.ProtectActivity")),
-            new Intent().setComponent(new ComponentName("com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity")),
-            new Intent().setComponent(new ComponentName("com.coloros.safecenter", "com.coloros.safecenter.startupapp.StartupAppListActivity")),
-            new Intent().setComponent(new ComponentName("com.oppo.safe", "com.oppo.safe.permission.startup.StartupAppListActivity")),
-            new Intent().setComponent(new ComponentName("com.iqoo.secure", "com.iqoo.secure.ui.phoneoptimize.AddWhiteListActivity")),
-            new Intent().setComponent(new ComponentName("com.iqoo.secure", "com.iqoo.secure.ui.phoneoptimize.BgStartUpManager")),
-            new Intent().setComponent(new ComponentName("com.vivo.permissionmanager", "com.vivo.permissionmanager.activity.BgStartUpManagerActivity")),
-            new Intent().setComponent(new ComponentName("com.asus.mobilemanager", "com.asus.mobilemanager.autostart.AutoStartActivity")),
-            new Intent().setComponent(new ComponentName("com.asus.mobilemanager", "com.asus.mobilemanager.entry.FunctionActivity")).setData(android.net.Uri.parse("mobilemanager://function/entry/AutoStart")),
-            new Intent().setAction("com.letv.android.permissionautoboot"),
-            new Intent().setComponent(new ComponentName("com.samsung.android.sm_cn", "com.samsung.android.sm.ui.ram.AutoRunActivity")),
-            new Intent().setComponent(ComponentName.unflattenFromString("com.iqoo.secure/.MainActivity")),
-            new Intent().setComponent(ComponentName.unflattenFromString("com.meizu.safe/.permission.SmartBGActivity")),
-            new Intent().setComponent(new ComponentName("com.yulong.android.coolsafe", ".ui.activity.autorun.AutoRunListActivity")),
-            new Intent().setComponent(new ComponentName("cn.nubia.security2", "cn.nubia.security.appmanage.selfstart.ui.SelfStartActivity")),
-            new Intent().setComponent(new ComponentName("com.zui.safecenter", "com.lenovo.safecenter.MainTab.LeSafeMainActivity"))
-        );
+                new Intent().setComponent(new ComponentName("com.miui.securitycenter",
+                        "com.miui.permcenter.autostart.AutoStartManagementActivity")),
+                new Intent().setComponent(new ComponentName("com.letv.android.letvsafe",
+                        "com.letv.android.letvsafe.AutobootManageActivity")),
+                new Intent().setComponent(new ComponentName("com.huawei.systemmanager",
+                        "com.huawei.systemmanager.appcontrol.activity.StartupAppControlActivity")),
+                new Intent().setComponent(new ComponentName("com.huawei.systemmanager",
+                        "com.huawei.systemmanager.optimize.process.ProtectActivity")),
+                new Intent().setComponent(new ComponentName("com.coloros.safecenter",
+                        "com.coloros.safecenter.permission.startup.StartupAppListActivity")),
+                new Intent().setComponent(new ComponentName("com.coloros.safecenter",
+                        "com.coloros.safecenter.startupapp.StartupAppListActivity")),
+                new Intent().setComponent(
+                        new ComponentName("com.oppo.safe", "com.oppo.safe.permission.startup.StartupAppListActivity")),
+                new Intent().setComponent(
+                        new ComponentName("com.iqoo.secure", "com.iqoo.secure.ui.phoneoptimize.AddWhiteListActivity")),
+                new Intent().setComponent(
+                        new ComponentName("com.iqoo.secure", "com.iqoo.secure.ui.phoneoptimize.BgStartUpManager")),
+                new Intent().setComponent(new ComponentName("com.vivo.permissionmanager",
+                        "com.vivo.permissionmanager.activity.BgStartUpManagerActivity")),
+                new Intent().setComponent(new ComponentName("com.asus.mobilemanager",
+                        "com.asus.mobilemanager.autostart.AutoStartActivity")),
+                new Intent()
+                        .setComponent(new ComponentName("com.asus.mobilemanager",
+                                "com.asus.mobilemanager.entry.FunctionActivity"))
+                        .setData(android.net.Uri.parse("mobilemanager://function/entry/AutoStart")),
+                new Intent().setAction("com.letv.android.permissionautoboot"),
+                new Intent().setComponent(new ComponentName("com.samsung.android.sm_cn",
+                        "com.samsung.android.sm.ui.ram.AutoRunActivity")),
+                new Intent().setComponent(ComponentName.unflattenFromString("com.iqoo.secure/.MainActivity")),
+                new Intent()
+                        .setComponent(ComponentName.unflattenFromString("com.meizu.safe/.permission.SmartBGActivity")),
+                new Intent().setComponent(
+                        new ComponentName("com.yulong.android.coolsafe", ".ui.activity.autorun.AutoRunListActivity")),
+                new Intent().setComponent(new ComponentName("cn.nubia.security2",
+                        "cn.nubia.security.appmanage.selfstart.ui.SelfStartActivity")),
+                new Intent().setComponent(
+                        new ComponentName("com.zui.safecenter", "com.lenovo.safecenter.MainTab.LeSafeMainActivity")));
     }
 }
